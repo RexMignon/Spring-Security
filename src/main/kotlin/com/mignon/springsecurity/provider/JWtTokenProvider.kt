@@ -1,0 +1,80 @@
+package com.mignon.springsecurity.provider
+
+
+import io.jsonwebtoken.*
+import io.jsonwebtoken.security.Keys
+import jakarta.annotation.PostConstruct
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.core.Authentication
+import org.springframework.stereotype.Component
+import java.security.Key
+import java.util.Date
+
+@Component
+class JwtTokenProvider() {
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(JwtTokenProvider::class.java)
+    }
+
+    @Value("\${app.jwtSecret}") // 从 application.properties 获取密钥
+    private lateinit var jwtSecret: String
+
+    @Value("\${app.jwtExpirationMs}") // 从 application.properties 获取过期时间
+    private var jwtExpirationMs: Int = 0
+
+    private lateinit var key: Key
+
+    @PostConstruct
+    fun init() {
+        this.key = Keys.hmacShaKeyFor(jwtSecret.toByteArray())
+    }
+        // 签发Token
+    fun generateToken(authentication: Authentication): String {
+        // 通常，UserDetails 实现了 Authentication
+        // TODO 这里可以设置id
+        // 如果你的 UserDetails 类是自定义的，确保它有获取用户名的方法
+        val username = authentication.name
+
+        val now = Date()
+        val expiryDate = Date(now.time + jwtExpirationMs)
+
+        return Jwts.builder()
+            .setSubject(username) // 主题：通常是用户名
+            .setIssuedAt(Date()) // 签发时间
+            .setExpiration(expiryDate) // 过期时间
+            .signWith(key, SignatureAlgorithm.HS512) // 签名算法和密钥
+            .compact()
+    }
+        // 从Token获取用户名
+    fun getUsernameFromToken(token: String): String {
+        return Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .body
+            .subject
+    }
+
+
+    // 验证Token
+    fun validateToken(authToken: String): Boolean {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken)
+            return true
+        } catch (e: io.jsonwebtoken.security.SecurityException) {
+            logger.error("SecurityException 无效的 JWT 签名 -> {}", e.message)
+        } catch (e: MalformedJwtException) {
+            logger.error("MalformedJwtException 无效的 JWT 签名 -> {}", e.message)
+        } catch (e: ExpiredJwtException) {
+            logger.error("过期的 JWT 令牌 -> {}", e.message)
+        } catch (e: UnsupportedJwtException) {
+            logger.error("不支持的 JWT 令牌 -> {}", e.message)
+        } catch (e: IllegalArgumentException) {
+            logger.error("JWT 字符串为空 -> {}", e.message)
+        }
+        return false
+    }
+}

@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: springSecurity
+  security:
+    user:
+      name: mignon
+      password: 123
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/security-demo
+    username: root
+    password: kingdyx0
+
+
+app:
+  jwtSecret: YourSecretKeyForJWTGenerationAndValidationWhichShouldBeLongAndComplex
+  jwtExpirationMs: 86400000   # 24h
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:mappers/**/*.xml
+
+server:
+  address: 127.0.0.1
+  port: 80
+logging:
+  config: classpath:logback.xml
+
+
