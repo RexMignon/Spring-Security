@@ -9,12 +9,12 @@ spring:
       client:
         registration:
           github:
-            client-id: Ov23li0EakPy4zPzHhQ2
-            client-secret: c671f7c83765a677e90eed62f1e7d8991de1c2bc
+            client-id: Ovxxxxxx
+            client-secret: cxxxxxx
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
         provider:
-          github: # <-- 这个 'github' 是 providerId，通常与 registrationId 相同
+          github:
             authorization-uri: https://github.com/login/oauth/authorize
             token-uri: https://github.com/login/oauth/access_token
             user-info-uri: https://api.github.com/user
@@ -23,7 +23,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/security-demo
     username: root
-    password: kingdyx0
+    password: xxxxx
 
   data:
     redis:
