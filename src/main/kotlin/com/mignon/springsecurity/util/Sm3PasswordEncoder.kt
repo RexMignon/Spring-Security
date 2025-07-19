@@ -16,7 +16,7 @@ import java.util.Arrays
 class Sm3PasswordEncoder : PasswordEncoder {
 
     companion object {
-        private const val ID_PREFIX = "{mignon}"
+        private const val ID_PREFIX = "<_MIGNON_SM3_>"
     }
 
     private val random = SecureRandom()
@@ -28,26 +28,23 @@ class Sm3PasswordEncoder : PasswordEncoder {
         val salt = generateSalt()
         val hashedBytes = hashWithSm3(rawPassword.toString().toByteArray(), salt)
 
-        // 拼接成 {sm3}盐值$哈希值 格式
-        return ID_PREFIX + Hex.toHexString(salt) + "$" + Hex.toHexString(hashedBytes)
+        return ID_PREFIX + Hex.toHexString(salt) + "&" + Hex.toHexString(hashedBytes)
     }
 
     override fun matches(rawPassword: CharSequence?, encodedPassword: String?): Boolean {
         if (rawPassword == null || encodedPassword == null) {
             return false
         }
+
         if (!encodedPassword.startsWith(ID_PREFIX)) {
-            // 如果不是 SM3 格式，可以考虑抛出异常或返回 false
-            // 这里我们返回 false，表示不匹配
             return false
         }
 
         // 截取前缀后的字符串
         val actualEncodedPassword = encodedPassword.removePrefix(ID_PREFIX)
-        val parts = actualEncodedPassword.split("$") // 使用 split() 方法
+        val parts = actualEncodedPassword.split("&")
 
         if (parts.size != 2) {
-            // 格式不正确
             return false
         }
 
@@ -55,7 +52,6 @@ class Sm3PasswordEncoder : PasswordEncoder {
         val storedHashedBytes = Hex.decode(parts[1])
 
         val newHashedBytes = hashWithSm3(rawPassword.toString().toByteArray(), salt)
-
         return newHashedBytes.contentEquals(storedHashedBytes)
     }
 

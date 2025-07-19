@@ -15,7 +15,7 @@ class MignonAuthenticationEntryPoint : AuthenticationEntryPoint {
     ) {
         // 用户未授权
         var map = mutableMapOf<String, Any>()
-        map.put("msg", "用户未登录")
+        map.put("msg", "失败")
         map.put("code", 401)
         map.put(
             "data", mutableMapOf<String, String>

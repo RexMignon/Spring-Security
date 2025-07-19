@@ -25,6 +25,7 @@ class CustomBannerPrinter : ApplicationRunner {
                     
              Version: 1.0.0-SNAPSHOT
       doc adress : http://127.0.0.1/doc.html
+          adress : http://127.0.0.1
            """.trimIndent()
 
         println("\n")

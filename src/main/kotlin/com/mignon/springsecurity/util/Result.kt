@@ -1,54 +1,164 @@
 package com.mignon.springsecurity.util
 
-sealed class Result<out T> {
 
-    /**
-     * 表示操作成功的状态。
-     *
-     * @param data 成功时返回的数据。
-     */
-    data class Success<out T>(val data: T) : Result<T>()
 
-    /**
-     * 表示操作失败的状态。
-     *
-     * @param exception 导致失败的异常。
-     * @param message 失败的描述信息，如果异常为null则可使用。
-     */
-    data class Error(val exception: Throwable? = null, val message: String? = null) : Result<Nothing>()
+import com.mignon.springsecurity.model.enum.SystemCodeEnum
+import io.swagger.v3.oas.annotations.media.Schema
+import java.util.Objects
 
-    /**
-     * 辅助函数：如果结果是 Success，则返回其数据；否则返回 null。
-     */
-    fun getOrNull(): T? {
-        return if (this is Success) this.data else null
+/**
+ * 接口响应结果类
+ * @param <T> 响应数据的泛型类型
+ */
+@Schema(description = "接口响应结果")
+data class Result<T>(
+    @Schema(description = "接口响应结果描述", required = true, example = "OK")
+    var msg: String? = null,
+
+    @Schema(description = "系统响应码", required = true, example = "200")
+    var code: Int? = null,
+
+    @Schema(description = "接口的响应数据", required = true)
+    var data: T? = null
+) {
+    companion object {
+        private const val FAILED_MSG = "FAIL"
+        private const val SUCCESS_MSG = "OK"
+
+        /**
+         * 创建一个成功的 Result 对象，带数据。
+         * @param data 响应数据
+         * @return 成功的 Result 对象
+         */
+        @JvmStatic
+        fun <T> success(data: T?): Result<T> {
+            return Result(
+                msg = SystemCodeEnum.SUCCESS.msg,
+                code = SystemCodeEnum.SUCCESS.code,
+                data = data
+            )
+        }
+
+        /**
+         * 创建一个成功的 Result 对象，带数据和自定义消息。
+         * @param data 响应数据
+         * @param message 自定义消息
+         * @return 成功的 Result 对象
+         */
+        @JvmStatic
+        fun <T> success(data: T?, message: String): Result<T> {
+            return Result(
+                msg = message,
+                code = SystemCodeEnum.SUCCESS.code,
+                data = data
+            )
+        }
+
+        /**
+         * 创建一个成功的 Result 对象，不带数据。
+         * @return 成功的 Result 对象
+         */
+        @JvmStatic
+        fun <T> success(): Result<T> {
+            return success(null)
+        }
+
+        /**
+         * 创建一个失败的 Result 对象，使用默认系统错误码和消息。
+         * @return 失败的 Result 对象
+         */
+        @JvmStatic
+        fun <T> failed(): Result<T> {
+            return Result(
+                msg = SystemCodeEnum.SYSTEM_ERROR.msg,
+                code = SystemCodeEnum.SYSTEM_ERROR.code,
+                data = null
+            )
+        }
+
+        /**
+         * 创建一个失败的 Result 对象，使用指定的系统错误码枚举。
+         * @param codeEnum 系统错误码枚举
+         * @return 失败的 Result 对象
+         */
+        @JvmStatic
+        fun <T> failed(codeEnum: SystemCodeEnum): Result<T> {
+            return Result(
+                msg = codeEnum.msg,
+                code = codeEnum.code,
+                data = null
+            )
+        }
+
+        /**
+         * 创建一个失败的 Result 对象，使用自定义消息和默认系统错误码。
+         * @param msg 自定义消息
+         * @return 失败的 Result 对象
+         */
+        @JvmStatic
+        fun <T> failed(msg: String): Result<T> {
+            return Result(
+                msg = msg,
+                code = SystemCodeEnum.SYSTEM_ERROR.code,
+                data = null
+            )
+        }
+
+        /**
+         * 创建一个失败的 Result 对象，使用自定义消息和错误码。
+         * @param message 自定义消息
+         * @param errorCode 错误码
+         * @return 失败的 Result 对象
+         */
+        @JvmStatic
+        fun <T> failed(message: String, errorCode: Int): Result<T> {
+            return Result(
+                msg = message,
+                code = errorCode,
+                data = null
+            )
+        }
+
+        /**
+         * 创建 ResultBuilder 实例。
+         * @return ResultBuilder 实例
+         */
+        @JvmStatic
+        fun <T> builder(): ResultBuilder<T> {
+            return ResultBuilder()
+        }
     }
 
     /**
-     * 辅助函数：如果结果是 Error，则返回其异常；否则返回 null。
+     * Result 的建造者类。
+     * @param <T> 响应数据的泛型类型
      */
-    fun exceptionOrNull(): Throwable? {
-        return if (this is Error) this.exception else null
-    }
+    class ResultBuilder<T> internal constructor() {
+        private var msg: String? = null
+        private var code: Int? = null
+        private var data: T? = null
 
-    /**
-     * 辅助函数：如果结果是 Error，则返回其错误信息；否则返回 null。
-     */
-    fun messageOrNull(): String? {
-        return if (this is Error) this.message else null
-    }
+        fun msg(msg: String?): ResultBuilder<T> {
+            this.msg = msg
+            return this
+        }
 
-    /**
-     * 对 Result 进行模式匹配，并执行相应的操作。
-     *
-     * @param onSuccess 当结果是 Success 时执行的 lambda 表达式。
-     * @param onError 当结果是 Error 时执行的 lambda 表达式。
-     * @return 返回 onSuccess 或 onError lambda 的结果。
-     */
-    inline fun <R> fold(onSuccess: (T) -> R, onError: (Throwable?, String?) -> R): R {
-        return when (this) {
-            is Success -> onSuccess(data)
-            is Error -> onError(exception, message)
+        fun code(code: Int?): ResultBuilder<T> {
+            this.code = code
+            return this
+        }
+
+        fun data(data: T?): ResultBuilder<T> {
+            this.data = data
+            return this
+        }
+
+        fun build(): Result<T> {
+            return Result(this.msg, this.code, this.data)
+        }
+
+        override fun toString(): String {
+            return "Result.ResultBuilder(msg=$msg, code=$code, data=$data)"
         }
     }
 }

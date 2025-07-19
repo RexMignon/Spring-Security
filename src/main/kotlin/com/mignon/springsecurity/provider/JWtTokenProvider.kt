@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Component
 import java.security.Key
 import java.util.Date
+import java.util.Objects
 
 @Component
 class JwtTokenProvider() {
@@ -32,7 +33,7 @@ class JwtTokenProvider() {
         this.key = Keys.hmacShaKeyFor(jwtSecret.toByteArray())
     }
         // 签发Token
-    fun generateToken(authentication: Authentication): String {
+    fun generateToken(authentication: Authentication, sessionId : String): String {
         // 通常，UserDetails 实现了 Authentication
         // TODO 这里可以设置id
         // 如果你的 UserDetails 类是自定义的，确保它有获取用户名的方法
@@ -45,6 +46,7 @@ class JwtTokenProvider() {
             .setSubject(username) // 主题：通常是用户名
             .setIssuedAt(Date()) // 签发时间
             .setExpiration(expiryDate) // 过期时间
+            .claim("sessionId", sessionId)
             .signWith(key, SignatureAlgorithm.HS512) // 签名算法和密钥
             .compact()
     }
@@ -59,22 +61,47 @@ class JwtTokenProvider() {
     }
 
 
+    public fun getSessionIdFromToken(token: String): String {
+        var claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .body
+        return claims["sessionId"] as String
+    }
+
+    /**
+     * TODO 应当从这里返回信息
+     * */
     // 验证Token
-    fun validateToken(authToken: String): Boolean {
+    fun validateToken(authToken: String): Map<String, String> {
+        // 第一个参数是result 结果, 如果为空,就证明 是验证成功
+        var map = mutableMapOf<String, String>()
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken)
-            return true
+            map.put("result", "")
+
+            return map
         } catch (e: io.jsonwebtoken.security.SecurityException) {
             logger.error("SecurityException 无效的 JWT 签名 -> {}", e.message)
+            map.put("result", "无效的 JWT 签名")
+            return map
         } catch (e: MalformedJwtException) {
             logger.error("MalformedJwtException 无效的 JWT 签名 -> {}", e.message)
+            map.put("result", "无效的 JWT 签名")
+            return map
         } catch (e: ExpiredJwtException) {
             logger.error("过期的 JWT 令牌 -> {}", e.message)
+            map.put("result", "过期的 JWT 令牌")
+            return map
         } catch (e: UnsupportedJwtException) {
             logger.error("不支持的 JWT 令牌 -> {}", e.message)
+            map.put("result", "不支持的 JWT 令牌")
+            return map
         } catch (e: IllegalArgumentException) {
-            logger.error("JWT 字符串为空 -> {}", e.message)
+            map.put("result", "JWT 字符串为空")
+            map.put("empty", "empty")
+            return map
         }
-        return false
     }
 }

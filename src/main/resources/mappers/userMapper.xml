@@ -3,5 +3,22 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mignon.springsecurity.mapper.UserMapper">
-
+    <resultMap id="userResultMap" type="com.mignon.springsecurity.model.po.UserPo">
+        <!-- id 字段映射，主键 -->
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <!-- username 字段映射 -->
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <!-- password 字段映射，明确指定为 VARCHAR 类型，这是解决问题的关键 -->
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <!-- role_id 字段映射 -->
+        <result column="role_id" property="roleId" jdbcType="BIGINT"/>
+        <!-- credentials_expired 字段映射 -->
+        <result column="credentials_expired" property="credentialsExpired" jdbcType="BOOLEAN"/>
+        <!-- account_expired 字段映射 -->
+        <result column="account_expired" property="accountExpired" jdbcType="BOOLEAN"/>
+        <!-- dis_enabled 字段映射 -->
+        <result column="dis_enabled" property="disEnabled" jdbcType="BOOLEAN"/>
+        <!-- account_locked 字段映射 -->
+        <result column="account_locked" property="accountLocked" jdbcType="BOOLEAN"/>
+    </resultMap>
 </mapper>

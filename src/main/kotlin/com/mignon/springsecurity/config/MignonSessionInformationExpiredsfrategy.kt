@@ -17,8 +17,7 @@ class MignonSessionInformationExpiredsfrategy: SessionInformationExpiredStrategy
             "data", mutableMapOf<String, String>
                 (
                 "message" to "该设备已在其他设备登录",
-                "principal" to "${event?.sessionInformation}",  //用户身份信息
-//                "credential" to "${authentication?.credentials}",// 用户密码
+                "principal" to "${event?.sessionInformation}",
             )
         )
         var json = JSON.toJSONString(map)

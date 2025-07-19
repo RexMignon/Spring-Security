@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 import com.mignon.springsecurity.util.Result
 import jakarta.validation.Valid
 import org.springframework.beans.BeanUtils
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.web.bind.annotation.GetMapping
@@ -31,16 +32,15 @@ class UserController
             userVo
         }
             .collect(Collectors.toList())
-        return Result.Success(list)
+        return Result.success(list)
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")
     public fun register(@Valid @RequestBody userDto: UserDto): Result<Boolean> {
         userService.saveUserDetails(userDto)
         var auth  = SecurityContextHolder.getContext().authentication
-        println(auth.name)
-        return Result.Success(true)
+        return Result.success(true)
     }
 
 }
